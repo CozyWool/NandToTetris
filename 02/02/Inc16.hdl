@@ -1,0 +1,13 @@
+// This file is part of www.nand2tetris.org
+/**
+ * 16-bit incrementer:
+ * out = in + 1 (arithmetic addition)
+ */
+
+CHIP Inc16 {
+    IN in[16];
+    OUT out[16];
+
+    PARTS:
+    // ...
+}
