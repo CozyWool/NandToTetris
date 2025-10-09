@@ -1,0 +1,27 @@
+/**
+ * A amplifier from 1-bit to 16-bit
+ */
+
+CHIP Amplifier {
+    IN in;
+    OUT out[16];
+
+    PARTS:
+    Not(in=in, out=notIn);
+    Nand(a=notIn, b=notIn, out=out[0]);
+    Nand(a=notIn, b=notIn, out=out[1]);
+    Nand(a=notIn, b=notIn, out=out[2]);
+    Nand(a=notIn, b=notIn, out=out[3]);
+    Nand(a=notIn, b=notIn, out=out[4]);
+    Nand(a=notIn, b=notIn, out=out[5]);
+    Nand(a=notIn, b=notIn, out=out[6]);
+    Nand(a=notIn, b=notIn, out=out[7]);
+    Nand(a=notIn, b=notIn, out=out[8]);
+    Nand(a=notIn, b=notIn, out=out[9]);
+    Nand(a=notIn, b=notIn, out=out[10]);
+    Nand(a=notIn, b=notIn, out=out[11]);
+    Nand(a=notIn, b=notIn, out=out[12]);
+    Nand(a=notIn, b=notIn, out=out[13]);
+    Nand(a=notIn, b=notIn, out=out[14]);
+    Nand(a=notIn, b=notIn, out=out[15]);
+}
