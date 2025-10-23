@@ -1,0 +1,13 @@
+/**
+ * Fast 16-bit incrementer.
+ */
+
+CHIP Inc16Fast {
+    IN in[16];
+    OUT out[16];
+
+    PARTS:
+    Inc8(in=in[0..7], out=resLow, out=out[0..7], carryOut=cLow);
+    Inc8(in=in[8..15], out=resHigh, carryOut=cHigh);
+    Mux16(a[8..15]=in[8..15], b[8..15]=resHigh, sel=cLow, out[8..15]=out[8..15]);
+}
