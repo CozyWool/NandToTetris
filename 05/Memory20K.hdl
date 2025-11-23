@@ -3,5 +3,33 @@ CHIP Memory20K {
     OUT out[16];
 
     PARTS:
-    // Put your code here:
+    // Грустно, что нельзя использовать чип Memory, код бы сильно упростился
+
+    // Проверяем, лежит ли адрес в зоне RAM16K
+    Not(in=address[14], out=addressInRAM16K);
+
+    // Проверяем, лежит ли адрес в зоне Screen
+    Not(in=address[13], out=notAddress13);
+    And(a=address[14], b=notAddress13, out=addressInScreen);
+
+    // Проверяем, лежит ли адрес в зоне RAM4K
+    And(a=address[14], b=address[13], out=high2BitsAnd);
+    And(a=high2BitsAnd, b=address[12], out=addressInRAM4K);
+
+    // Проверяем, нужно ли вообще загружать в память
+    And(a=addressInRAM16K, b=load, out=shouldLoadInRAM16K);
+    And(a=addressInScreen, b=load, out=shouldWriteInScreen);
+    And(a=addressInRAM4K, b=load, out=shoundWriteInRAM4K);
+
+    // Память
+    RAM16K(in=in, load=shouldLoadInRAM16K, address=address[0..13], out=dataFromRAM16K);
+    Screen(in=in, load=shouldWriteInScreen, address=address[0..12], out=dataFromScreen);
+    Keyboard(out=dataFromKeyboard);
+    RAM4K(in=in, load=shoundWriteInRAM4K, address=address[0..11], out=dataFromRAM4K);
+
+    // Выбираем нужный выход
+    Or(a=addressInRAM16K, b=addressInScreen, out=addressNotInKeyboard);
+    Mux16(a=dataFromScreen, b=dataFromRAM16K, sel=addressInRAM16K, out=outFromScreenOrRAM16K);
+    Mux16(a=dataFromKeyboard, b=outFromScreenOrRAM16K, sel=addressNotInKeyboard, out=outFromMemory);
+    Mux16(a=outFromMemory, b=dataFromRAM4K, sel=addressInRAM4K, out=out);
 }
