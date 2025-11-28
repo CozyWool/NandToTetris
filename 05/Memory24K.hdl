@@ -1,0 +1,44 @@
+CHIP Memory24K {
+    IN in[16], load, address[15];
+    OUT out[16];
+
+    PARTS:
+    // Проверяем, лежит ли адрес в зоне RAM16K
+    Not(in=address[14], out=addressInRAM16K);
+
+    // Проверяем, лежит ли адрес в зоне Screen
+    Not(in=address[13], out=notAddress13);
+    And(a=address[14], b=notAddress13, out=addressInScreen);
+
+    // Проверяем, лежит ли адрес в зоне RAM4K (1)
+    Or8Way(in=address[0..7], out=first8bitsIsZero);
+    Or8Way(in[0]=first8bitsIsZero, in[1..4]=address[8..11], out=isNotKeyboard);
+
+    And(a=address[14], b=address[13], out=high2BitsAnd);
+    Not(in=address[12], out=notAddress12);
+    And(a=isNotKeyboard, b=high2BitsAnd, out=high2BitsAndIsNotKeyboard);
+    And(a=high2BitsAndIsNotKeyboard, b=notAddress12, out=addressInFirstRAM4K);
+
+    // Проверяем, лежит ли адрес в зоне RAM4K (2)
+    And(a=high2BitsAnd, b=address[12], out=addressInSecondRAM4K);
+
+    // Проверяем, нужно ли вообще загружать в память
+    And(a=addressInRAM16K, b=load, out=shouldLoadInRAM16K);
+    And(a=addressInScreen, b=load, out=shouldWriteInScreen);
+    And(a=addressInFirstRAM4K, b=load, out=shoundWriteInFirstRAM4K);
+    And(a=addressInSecondRAM4K, b=load, out=shoundWriteInSecondRAM4K);
+
+    // Память
+    RAM16K(in=in, load=shouldLoadInRAM16K, address=address[0..13], out=dataFromRAM16K);
+    Screen(in=in, load=shouldWriteInScreen, address=address[0..12], out=dataFromScreen);
+    Keyboard(out=dataFromKeyboard);
+    RAM4K(in=in, load=shoundWriteInFirstRAM4K, address=address[0..11], out=dataFromFirstRAM4K);
+    RAM4K(in=in, load=shoundWriteInSecondRAM4K, address=address[0..11], out=dataFromSecondRAM4K);
+
+    // Выбираем нужный выход
+    Or(a=addressInRAM16K, b=addressInScreen, out=addressNotInKeyboard);
+    Mux16(a=dataFromScreen, b=dataFromRAM16K, sel=addressInRAM16K, out=outFromScreenOrRAM16K);
+    Mux16(a=dataFromKeyboard, b=outFromScreenOrRAM16K, sel=addressNotInKeyboard, out=outFromMemory);
+    Mux16(a=outFromMemory, b=dataFromFirstRAM4K, sel=addressInFirstdRAM4K, out=outFromMemoryOrFirstRAM4K);
+    Mux16(a=outFromMemoryOrFirstRAM4K, b=dataFromSecondRAM4K, sel=addressInSecondRAM4K, out=out);
+}
