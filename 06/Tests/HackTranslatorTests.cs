@@ -41,10 +41,10 @@ namespace Assembler.Tests
         {
             var translator = new HackTranslator();
             var symbolTable = new Dictionary<string, int>
-            {
-                {"abc", 42},
-                {"B", 1},
-            };
+                              {
+                                  {"abc", 42},
+                                  {"B", 1},
+                              };
             var code = translator.AInstructionToCode(text, symbolTable);
             Assert.AreEqual(expectedCode, code);
         }

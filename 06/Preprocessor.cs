@@ -1,7 +1,3 @@
-using System.Collections.Generic;
-using System.Linq;
-using System;
-
 namespace Assembler
 {
     public class Preprocessor
@@ -12,7 +8,7 @@ namespace Assembler
         public string[] PreprocessAsm(string[] instructions)
         {
             var asmCode = new List<string>();
-            for (int i = 0; i < instructions.Length; i++)
+            for (var i = 0; i < instructions.Length; i++)
             {
                 var instr = instructions[i];
                 try
