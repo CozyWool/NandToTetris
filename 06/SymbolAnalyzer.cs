@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-
 namespace Assembler
 {
     public class SymbolAnalyzer
@@ -31,14 +29,52 @@ namespace Assembler
                             ["SCREEN"] = 0x4000,
                             ["KBD"] = 0x6000
                         };
-            foreach (var instruction in instructionsWithLabels)
+
+            // Индекс - номер инструкции в нумерации без меток
+            // Значение - номер инструкции в исходной нумерации
+            var indices = new List<int>();
+
+            instructionsWithoutLabels = instructionsWithLabels
+                                        .Where((instruction, lineNumber) =>
+                                               {
+                                                   var isNotMark = instruction[0] != '(';
+                                                   if (isNotMark)
+                                                   {
+                                                       indices.Add(lineNumber);
+                                                   }
+
+                                                   return isNotMark;
+                                               })
+                                        .ToArray();
+
+            for (var i = 0; i < instructionsWithLabels.Length; i++)
             {
-                if (instruction[0] == '(' && instruction.Length > 2) // Инструкция начинается с "(" и не пустые скобки
+                var instruction = instructionsWithLabels[i];
+
+                // Инструкция - метка
+                if (instruction[0] == '(')
                 {
+                    table[instruction[1..^1]] = FindInstructionAddress(indices, i);
                 }
             }
-            instructionsWithoutLabels = new string[instructionsWithLabels.Length];
+
             return table;
+        }
+
+        private static int FindInstructionAddress(List<int> indices, int i)
+        {
+            // Нужно найти первую инструкцию, идущую после метки
+            // Причем эта инструкция не должна быть меткой
+
+            // Из документации: https://learn.microsoft.com/ru-ru/dotnet/api/System.Collections.Generic.List-1.BinarySearch?view=net-6.0
+            // Метод BinarySearch возвращает индекс искомого элемента (в нашем случае его никогда там не будет)
+            // Если элемента в списке нет, то метод возвращает отрицательное число
+            // Операцию побитового дополнения (~) можно применить к этому отрицательному числу,
+            // чтобы получить индекс первого элемента, который больше значения поиска (То, что нам и нужно)
+            var lineIndex = indices.BinarySearch(i);
+            return lineIndex >= 0
+                       ? lineIndex
+                       : ~lineIndex;
         }
     }
 }
