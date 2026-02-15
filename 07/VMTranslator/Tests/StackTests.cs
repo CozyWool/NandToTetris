@@ -31,7 +31,7 @@ public class StackTests
     {
         var emulator = program.Split("|").LoadVmCodeToEmulator(withMemoryInit: true).EmulateTicks(100);
         Assert.That(emulator.Ram[0], Is.EqualTo(256 + stackValues.Length));
-        for (int i = 0; i < stackValues.Length; i++)
+        for (var i = 0; i < stackValues.Length; i++)
             Assert.That(emulator.Ram[256 + i], Is.EqualTo(stackValues[i]));
     }
 

@@ -52,7 +52,7 @@ public static class VmTestsHelper
     public static void ShouldBeSameAsInCmpFile(this HackEmulator emulator, string cmpFile)
     {
         var cmpFileContent = File.ReadAllLines(cmpFile);
-        for (int i = 0; i < cmpFileContent.Length; i += 2)
+        for (var i = 0; i < cmpFileContent.Length; i += 2)
         {
             var addresses = cmpFileContent[i].Split("|", StringSplitOptions.RemoveEmptyEntries)
                 .Select(v => v.Trim().Replace("RAM[", "").Replace("]", "")).Select(int.Parse).ToArray();

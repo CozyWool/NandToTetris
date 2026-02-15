@@ -31,7 +31,9 @@ public partial class CodeWriter
                       || TryWriteProgramFlowCode(instruction, moduleName)
                       || TryWriteFunctionCallCode(instruction);
         if (!success)
+        {
             throw new FormatException($"Unknown instruction [{instruction}]");
+        }
     }
 
     // Транслирует все строки кода внутри модуля moduleName.

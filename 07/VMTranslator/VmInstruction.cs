@@ -12,8 +12,16 @@ public record VmInstruction(int LineNumber, string Name, params string[] Args)
     // Без этого Args сравнивались бы по ссылкам, а нужно, чтобы сравнивались поэлементно
     public virtual bool Equals(VmInstruction other)
     {
-        if (ReferenceEquals(null, other)) return false;
-        if (ReferenceEquals(this, other)) return true;
+        if (ReferenceEquals(null, other))
+        {
+            return false;
+        }
+
+        if (ReferenceEquals(this, other))
+        {
+            return true;
+        }
+
         return Name == other.Name && Args.SequenceEqual(other.Args);
     }
 

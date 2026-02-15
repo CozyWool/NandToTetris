@@ -22,15 +22,21 @@ public class HackEmulator
     {
         this.rom = rom;
         if (ramInitValue != 0)
-            for (int i = 0; i < Ram.Length; i++)
+        {
+            for (var i = 0; i < Ram.Length; i++)
                 Ram[i] = ramInitValue;
+        }
     }
 
     public HackEmulator EmulateTicks(int ticksCount)
     {
-        for (int i = 0; i < ticksCount; i++)
+        for (var i = 0; i < ticksCount; i++)
         {
-            if (Pc >= rom.Length) break;
+            if (Pc >= rom.Length)
+            {
+                break;
+            }
+
             Tick();
         }
         return this;
@@ -67,9 +73,20 @@ public class HackEmulator
 
     private void SetDest(string dest, short value)
     {
-        if (dest[2] == '1') M = value;
-        if (dest[1] == '1') D = value;
-        if (dest[0] == '1') A = value;
+        if (dest[2] == '1')
+        {
+            M = value;
+        }
+
+        if (dest[1] == '1')
+        {
+            D = value;
+        }
+
+        if (dest[0] == '1')
+        {
+            A = value;
+        }
     }
 
     private short Compute(string comp, short am)
@@ -94,14 +111,26 @@ public class HackEmulator
         sb.AppendLine($"PC: {Pc}: {(Pc >= rom.Length ? "END" : rom[Pc])}");
         sb.AppendLine($"D: {D}    A: {A}     M: {SafeGetM() ?? "[A is not valid address]"}");
         sb.AppendLine("RAM (zero registers are omitted):");
-        for (int i = 0; i < Ram.Length; i++)
+        for (var i = 0; i < Ram.Length; i++)
         {
             if (i < 20 || Ram[i] != 0)
             {
                 sb.Append($"RAM[{i}] = {Ram[i]}");
-                if (i == Ram[0]) sb.Append(" <- SP");
-                if (i == Ram[1]) sb.Append(" <- LCL");
-                if (i == Ram[2]) sb.Append(" <- ARG");
+                if (i == Ram[0])
+                {
+                    sb.Append(" <- SP");
+                }
+
+                if (i == Ram[1])
+                {
+                    sb.Append(" <- LCL");
+                }
+
+                if (i == Ram[2])
+                {
+                    sb.Append(" <- ARG");
+                }
+
                 sb.AppendLine();
             }
         }
@@ -111,8 +140,12 @@ public class HackEmulator
     private string SafeGetM()
     {
         if (A >= 0 && A < Ram.Length)
+        {
             return Ram[A].ToString();
+        }
         else
+        {
             return null;
+        }
     }
 }

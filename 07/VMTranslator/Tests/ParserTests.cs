@@ -63,7 +63,9 @@ public class ParserTests
             while (line < inputLines.Length && !inputLines[line].Trim().StartsWith(instruction.ToString()))
                 line++;
             if (line >= inputLines.Length)
+            {
                 Assert.Fail($"Parsed instruction [{instruction}] not present in source file :(");
+            }
         }
     }
 

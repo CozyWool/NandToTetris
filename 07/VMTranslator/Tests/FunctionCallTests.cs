@@ -49,7 +49,7 @@ public class FunctionCallTests
         var lcl = ram[1];
         Assert.That(lcl, Is.EqualTo(VmInitialization.Local)); // LCL should not changed
         Assert.That(sp, Is.EqualTo(VmInitialization.Sp + localVariablesCount)); // stack pointer
-        for (int i = 0; i < localVariablesCount; i++)
+        for (var i = 0; i < localVariablesCount; i++)
         {
             Assert.That(ram[sp-1-i], Is.EqualTo(0)); // default 0
         }
