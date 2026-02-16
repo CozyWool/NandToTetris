@@ -12,44 +12,41 @@ public class Parser
     public VmInstruction[] Parse(string[] vmLines)
     {
         var instructions = new List<VmInstruction>();
-        var lineNumber = 1;
-        foreach (var line in vmLines)
+
+        for (var lineNumber = 0; lineNumber < vmLines.Length; ++lineNumber)
         {
-            var trimmedLine = line.Trim();
-            if (trimmedLine.StartsWith("//"))
+            var line = vmLines[lineNumber];
+
+            if (TryParseInstruction(line, lineNumber + 1, out var instruction))
             {
-                lineNumber++;
-                continue;
+                instructions.Add(instruction);
             }
-
-            var splitted = trimmedLine.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-            if (splitted.Length == 0)
-            {
-                lineNumber++;
-                continue;
-            }
-
-            var instructionEnd = splitted.Length;
-            for (var i = 0; i < splitted.Length; i++)
-            {
-                if (splitted[i].StartsWith("//"))
-                {
-                    instructionEnd = i;
-                    break;
-                }
-
-                if (splitted[i].Contains("//"))
-                {
-                    splitted[i] = splitted[i].Split("//")[0];
-                    instructionEnd = i + 1;
-                    break;
-                }
-            }
-
-            var instruction = new VmInstruction(lineNumber++, splitted[0], splitted[1..instructionEnd]);
-            instructions.Add(instruction);
         }
 
         return instructions.ToArray();
+    }
+
+    private bool TryParseInstruction(string line, int lineNumber, out VmInstruction instruction)
+    {
+        instruction = null;
+        var lineWithoutComment = RemoveComment(line);
+        var parts = lineWithoutComment.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+
+        if (parts.Length == 0)
+        {
+            return false;
+        }
+
+        var command = parts[0];
+        var arguments = parts.Length > 1 ? parts[1..] : Array.Empty<string>();
+
+        instruction = new VmInstruction(lineNumber, command, arguments);
+        return true;
+    }
+
+    private string RemoveComment(string line)
+    {
+        var commentIndex = line.IndexOf("//", StringComparison.Ordinal);
+        return commentIndex >= 0 ? line[..commentIndex].Trim() : line.Trim();
     }
 }

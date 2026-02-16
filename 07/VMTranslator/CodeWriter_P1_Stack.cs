@@ -26,12 +26,43 @@ public partial class CodeWriter
     /// </returns>
     private bool TryWriteStackCode(VmInstruction instruction, string moduleName)
     {
+        string segment, index, baseAddress;
+        switch (instruction.Name)
+        {
+            case "push":
+                segment = instruction.Args[0];
+                index = instruction.Args[1];
+                baseAddress = GetBaseAddress(segment, moduleName, index);
+                return true;
+            case "pop":
+                segment = instruction.Args[0];
+                index = instruction.Args[1];
+                baseAddress = GetBaseAddress(segment, moduleName, index);
+                return true;
+        }
+
         return false;
+    }
+
+    private string GetBaseAddress(string segment, string moduleName, string index)
+    {
+        return segment switch
+               {
+                   "constant" => "SP",
+                   "local"    => "LCL",
+                   "argument" => "ARG",
+                   "this"     => "THIS",
+                   "that"     => "THAT",
+                   "temp"     => "5",
+                   "static"   => $"{moduleName}.{index}",
+                   "pointer"  => index == "1" ? "THAT " : "THIS",
+               };
     }
 
     // Генерирует код, для сохранения значения D регистра в стек
     private void WritePushD()
     {
+
     }
 
     // Генерирует код, для извлечения из стека значения в D регистр
