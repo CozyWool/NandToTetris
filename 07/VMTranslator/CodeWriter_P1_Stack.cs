@@ -26,47 +26,120 @@ public partial class CodeWriter
     /// </returns>
     private bool TryWriteStackCode(VmInstruction instruction, string moduleName)
     {
-        string segment, index, baseAddress;
+        string index, baseAddress;
         switch (instruction.Name)
         {
             case "push":
-                segment = instruction.Args[0];
-                index = instruction.Args[1];
-                baseAddress = GetBaseAddress(segment, moduleName, index);
+                (index, baseAddress) = GetBaseAddress(instruction, moduleName);
+
+                WriteLoadD(baseAddress, index);
+                WritePushD();
+
                 return true;
             case "pop":
-                segment = instruction.Args[0];
-                index = instruction.Args[1];
-                baseAddress = GetBaseAddress(segment, moduleName, index);
-                return true;
-        }
+                (index, baseAddress) = GetBaseAddress(instruction, moduleName);
 
-        return false;
+                WritePopToD();
+                WriteStoreD(baseAddress, index);
+
+                return true;
+            default:
+                return false;
+        }
     }
 
-    private string GetBaseAddress(string segment, string moduleName, string index)
+    private (string index, string baseAddress) GetBaseAddress(VmInstruction instruction, string moduleName)
     {
-        return segment switch
-               {
-                   "constant" => "SP",
-                   "local"    => "LCL",
-                   "argument" => "ARG",
-                   "this"     => "THIS",
-                   "that"     => "THAT",
-                   "temp"     => "5",
-                   "static"   => $"{moduleName}.{index}",
-                   "pointer"  => index == "1" ? "THAT " : "THIS",
-               };
+        var segment = instruction.Args[0];
+        var index = instruction.Args[1];
+        var baseAddress = segment switch
+                          {
+                              "local"    => "LCL",
+                              "argument" => "ARG",
+                              "this"     => "THIS",
+                              "that"     => "THAT",
+                              "static"   => $"{moduleName}.{index}",
+                              _          => segment
+                          };
+        return (index, baseAddress);
     }
 
     // Генерирует код, для сохранения значения D регистра в стек
     private void WritePushD()
     {
+        WriteAsm("@SP",
+                 "A=M",
+                 "M=D",
+                 "@SP",
+                 "M=M+1");
+    }
 
+    private void WriteLoadD(string baseAddress, string index)
+    {
+        if (baseAddress is "pointer" or "temp" || baseAddress.Contains('.'))
+        {
+            var address = baseAddress switch
+                          {
+                              "pointer" => (int.Parse(index) + 3).ToString(),
+                              "temp"    => (int.Parse(index) + 5).ToString(),
+                              _         => baseAddress
+                          };
+
+            WriteAsm($"@{address}",
+                     "M=D");
+        }
+        else
+        {
+            WriteAsm($"@{index}",
+                     "D=A");
+            if (baseAddress == "constant") // В D уже и так находится index, дальше вычислять не нужно
+            {
+                return;
+            }
+
+            WriteAsm($"@{baseAddress}",
+                     "A=D+M", // Вычисляем адрес
+                     "D=M");
+        }
     }
 
     // Генерирует код, для извлечения из стека значения в D регистр
     private void WritePopToD()
     {
+        WriteAsm("@SP",
+                 "AM=M-1", // Делаем SP-- и заодно адресуемся на SP-1
+                 "D=M");
+    }
+
+    private void WriteStoreD(string baseAddress, string index)
+    {
+        if (baseAddress is "LCL" or "ARG" or "THIS" or "THAT")
+        {
+            WriteAsm("@R14",
+                     "M=D", // Сохраняем значение из D
+                     $"@{index}",
+                     "D=A",
+                     $"@{baseAddress}",
+                     "D=D+M", // Вычисленный адрес назначения
+                     "@R13",
+                     "M=D",
+                     "@R14",
+                     "D=M",
+                     "@R13",
+                     "A=M",
+                     "M=D");
+        }
+        else
+        {
+            var address = baseAddress switch
+                          {
+                              "pointer" => (int.Parse(index) + 3).ToString(),
+                              "temp"    => (int.Parse(index) + 5).ToString(),
+                              _         => baseAddress
+                          };
+
+            WriteAsm($"@{address}",
+                     "M=D");
+        }
     }
 }
