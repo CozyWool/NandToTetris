@@ -31,16 +31,12 @@ public partial class CodeWriter
         {
             case "push":
                 (index, baseAddress) = GetBaseAddress(instruction, moduleName);
-
-                WriteLoadD(baseAddress, index);
-                WritePushD();
+                WritePushFromSegment(baseAddress, index);
 
                 return true;
             case "pop":
                 (index, baseAddress) = GetBaseAddress(instruction, moduleName);
-
-                WritePopToD();
-                WriteStoreD(baseAddress, index);
+                WritePopToSegment(baseAddress, index);
 
                 return true;
             default:
@@ -86,7 +82,7 @@ public partial class CodeWriter
                           };
 
             WriteAsm($"@{address}",
-                     "M=D");
+                     "D=M");
         }
         else
         {
@@ -103,6 +99,12 @@ public partial class CodeWriter
         }
     }
 
+    private void WritePushFromSegment(string baseAddress, string index)
+    {
+        WriteLoadD(baseAddress, index);
+        WritePushD();
+    }
+
     // Генерирует код, для извлечения из стека значения в D регистр
     private void WritePopToD()
     {
@@ -111,23 +113,42 @@ public partial class CodeWriter
                  "D=M");
     }
 
-    private void WriteStoreD(string baseAddress, string index)
+    private void WritePopToSegment(string baseAddress, string index)
     {
-        if (baseAddress is "LCL" or "ARG" or "THIS" or "THAT")
+        // Вычисляем адрес назначения
+        WriteComputeAddressToR13(baseAddress, index);
+
+        // Читаем значение со стека
+        WritePopToD();
+
+        // Адресуемся на нужную ячейку
+        WriteDestinationAddress(baseAddress, index);
+
+        WriteAsm("M=D"); // Записываем в ячейку значение из D
+    }
+
+    // Вычисляем адрес назначения
+    private void WriteComputeAddressToR13(string baseAddress, string index)
+    {
+        if (baseAddress is "LCL" or "ARG" or "THIS" or "THAT") // Остальные случаи можно подсчитать заранее (не в Hack)
         {
-            WriteAsm("@R14",
-                     "M=D", // Сохраняем значение из D
-                     $"@{index}",
+            WriteAsm($"@{index}",
                      "D=A",
                      $"@{baseAddress}",
-                     "D=D+M", // Вычисленный адрес назначения
+                     "D=D+M",
                      "@R13",
-                     "M=D",
-                     "@R14",
-                     "D=M",
-                     "@R13",
-                     "A=M",
                      "M=D");
+        }
+    }
+
+    private void WriteDestinationAddress(string baseAddress, string index)
+    {
+        // Адресуемся на нужную ячейку
+        if (baseAddress is "LCL" or "ARG" or "THIS" or "THAT")
+        {
+            // Записываем в вычисленный адрес
+            WriteAsm("@R13",
+                     "A=M");
         }
         else
         {
@@ -138,8 +159,7 @@ public partial class CodeWriter
                               _         => baseAddress
                           };
 
-            WriteAsm($"@{address}",
-                     "M=D");
+            WriteAsm($"@{address}");
         }
     }
 }
