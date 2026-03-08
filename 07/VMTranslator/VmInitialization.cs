@@ -1,5 +1,3 @@
-using System;
-
 namespace VMTranslator;
 
 public static class VmInitialization
@@ -16,6 +14,21 @@ public static class VmInitialization
     /// </summary>
     public static void WriteMemoryInitialization(this CodeWriter translator)
     {
-        // TODO
+        translator.WriteValueToRam(0, Sp);
+        translator.WriteValueToRam(1, Local);
+        translator.WriteValueToRam(2, Argument);
+        translator.WriteValueToRam(3, This);
+        translator.WriteValueToRam(4, That);
+    }
+
+    private static void WriteValueToRam(this CodeWriter translator, int index, int value)
+    {
+        translator.ResultAsmCode.AddRange(new[]
+                                          {
+                                              $"@{value}",
+                                              "D=A",
+                                              $"@{index}",
+                                              "M=D"
+                                          });
     }
 }
