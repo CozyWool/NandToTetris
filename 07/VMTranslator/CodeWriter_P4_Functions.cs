@@ -137,14 +137,34 @@ public partial class CodeWriter
                  "0;JMP");
     }
 
-    private void RestoreSegment(string segment, int offset)
+    private void RestoreSegments()
     {
-        WriteAsm("@R13",
+        var segments = new[] {"THAT", "THIS", "ARG", "LCL"};
+        for (var i = 0; i < 4; i++)
+        {
+            WriteAsm("@R13",
+                     "MD=M-1",
+                     "A=D",
+                     "D=M",
+                     $"@{segments[i]}",
+                     "M=D");
+        }
+    }
+
+    private void SaveEndFrameToR13()
+    {
+        WriteAsm("@LCL",
                  "D=M",
-                 $"@{offset}",
+                 "@R13", // endFrame
+                 "M=D");
+    }
+
+    private void SaveReturnAddressToR14()
+    {
+        WriteAsm("@5",
                  "A=D-A",
                  "D=M",
-                 $"@{segment}",
+                 "@R14", // returnAddress
                  "M=D");
     }
 }
