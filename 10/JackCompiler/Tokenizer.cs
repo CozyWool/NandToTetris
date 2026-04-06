@@ -1,14 +1,34 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace JackCompiling
 {
     public class Tokenizer
     {
+        private readonly string _text;
+        private int _pos = 0;
+
+
+        private readonly Stack<Token> _tokens = new();
+
+        private static readonly HashSet<string> Keywords = new()
+                                                           {
+                                                               "class", "constructor", "function", "method", "field",
+                                                               "static", "var",
+                                                               "int", "char", "boolean", "void", "true", "false",
+                                                               "null", "this",
+                                                               "let", "do", "if", "else", "while", "return"
+                                                           };
+
+        private static readonly HashSet<char> Symbols = new()
+                                                        {
+                                                            '{', '}', '(', ')', '[', ']', '.', ',', ';', '+', '-', '*',
+                                                            '/', '&', '|', '<', '>', '=', '~'
+                                                        };
+
         public Tokenizer(string text)
         {
-            throw new NotImplementedException();
+            _text = text;
         }
 
         /// <summary>
@@ -20,7 +40,151 @@ namespace JackCompiling
         /// </summary>
         public Token? TryReadNext()
         {
-            throw new NotImplementedException();
+            if (_tokens.Count > 0)
+            {
+                return _tokens.Pop();
+            }
+
+            SkipWhitespacesAndComments();
+
+            if (_pos >= _text.Length)
+            {
+                return null;
+            }
+
+            return TryReadStringConstant() ??
+                   TryReadIntegerConstant() ??
+                   TryReadIdentifierOrKeyword() ??
+                   TryReadSymbol() ??
+                   throw new Exception($"Unexpected symbol: {_text[_pos]}");
+        }
+
+
+        private void SkipWhitespacesAndComments()
+        {
+            while (_pos < _text.Length)
+            {
+                var current = _text[_pos];
+                if (char.IsWhiteSpace(current))
+                {
+                    _pos++;
+                    continue;
+                }
+
+                if (SkipComment("//", "\n") || SkipComment("/*", "*/"))
+                {
+                    continue;
+                }
+
+                break;
+            }
+        }
+
+        private bool SkipComment(string start, string end)
+        {
+            if (!StartsWith(start))
+            {
+                return false;
+            }
+
+            _pos += start.Length;
+
+            while (_pos < _text.Length && !StartsWith(end))
+            {
+                _pos++;
+            }
+
+            _pos += end.Length;
+            return true;
+        }
+
+
+        private Token? TryReadStringConstant()
+        {
+            if (_text[_pos] != '"')
+            {
+                return null;
+            }
+
+            _pos++; // открывающаяся "
+
+            var start = _pos;
+            while (_pos < _text.Length && _text[_pos] != '"')
+            {
+                _pos++;
+            }
+
+            var value = _text[start.._pos];
+            _pos++; // закрывающаяся "
+
+            return new Token(TokenType.StringConstant, value, 0, 0);
+        }
+
+        private Token? TryReadIntegerConstant()
+        {
+            if (!char.IsDigit(_text[_pos]))
+            {
+                return null;
+            }
+
+            var start = _pos;
+            while (_pos < _text.Length && char.IsDigit(_text[_pos]))
+            {
+                _pos++;
+            }
+
+            return new Token(TokenType.IntegerConstant, _text[start.._pos], 0, 0);
+        }
+
+        private Token? TryReadIdentifierOrKeyword()
+        {
+            if (!(char.IsLetter(_text[_pos]) || _text[_pos] == '_'))
+            {
+                return null;
+            }
+
+            var start = _pos;
+            while (_pos < _text.Length &&
+                   (char.IsLetterOrDigit(_text[_pos]) || _text[_pos] == '_'))
+            {
+                _pos++;
+            }
+
+            var value = _text[start.._pos];
+
+            var type = Keywords.Contains(value)
+                           ? TokenType.Keyword
+                           : TokenType.Identifier;
+
+            return new Token(type, value, 0, 0);
+        }
+
+        private Token? TryReadSymbol()
+        {
+            if (!Symbols.Contains(_text[_pos]))
+            {
+                return null;
+            }
+
+            return new Token(TokenType.Symbol, _text[_pos++].ToString(), 0, 0);
+        }
+
+        private bool StartsWith(string s)
+        {
+            if (_pos + s.Length > _text.Length)
+            {
+                return false;
+            }
+
+            for (var i = 0; i < s.Length; i++)
+            {
+                if (_text[_pos + i] != s[i])
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
 
         /// <summary>
@@ -30,7 +194,10 @@ namespace JackCompiling
         /// </summary>
         public void PushBack(Token? token)
         {
-            throw new NotImplementedException();
+            if (token != null)
+            {
+                _tokens.Push(token);
+            }
         }
     }
 }

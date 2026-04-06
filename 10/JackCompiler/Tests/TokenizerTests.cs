@@ -73,7 +73,10 @@ namespace JackCompiling.Tests
 
             Assert.IsNull(tokenizer.TryReadNext());
             while (tokens.Any())
+            {
                 tokenizer.PushBack(tokens.Pop());
+            }
+
             foreach (var expectedType in expectedTypes)
             {
                 var token = tokenizer.TryReadNext()!;
@@ -91,13 +94,19 @@ namespace JackCompiling.Tests
             while(true)
             {
                 var token = tokenizer.TryReadNext();
-                if (token is null) break;
+                if (token is null)
+                {
+                    break;
+                }
+
                 tokens.Add(token);
             }
-            
+
             foreach (var token in Enumerable.Reverse(tokens))
+            {
                 tokenizer.PushBack(token);
-            
+            }
+
             foreach (var token in tokens)
             {
                 var readToken = tokenizer.TryReadNext()!;
@@ -124,7 +133,7 @@ namespace JackCompiling.Tests
             var tokenizer = new Tokenizer(text);
             Assert.AreEqual(42, tokenizer.TryReadNext()!.IntValue);
         }
-        
+
         [TestCase("42 //\n")]
         [TestCase("42 //")]
         [TestCase("42 /**/")]

@@ -1,5 +1,3 @@
-using System;
-
 namespace JackCompiling
 {
     public partial class CodeWriter

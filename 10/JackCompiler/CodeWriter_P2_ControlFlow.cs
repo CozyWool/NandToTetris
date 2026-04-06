@@ -18,7 +18,9 @@ namespace JackCompiling
                      || TryWriteArrayAssignmentStatement(statement)  // будет реализована в следующий задачах
                      || TryWriteReturnStatement(statement);  // будет реализована в следующий задачах
             if (!ok)
+            {
                 throw new FormatException($"Unknown statement [{statement}]");
+            }
         }
 
         /// <summary>let VarName = Expression;</summary>

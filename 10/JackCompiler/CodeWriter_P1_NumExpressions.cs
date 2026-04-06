@@ -18,7 +18,9 @@ namespace JackCompiling
                      || TryWriteSubroutineCall(term) // будет реализована в следующих задачах
                      || TryWriteNumericTerm(term);
             if (!ok)
+            {
                 throw new FormatException($"Unknown term [{term}]");
+            }
         }
 
         /// <summary>42 | true | false | varName | -x | ( x )</summary>

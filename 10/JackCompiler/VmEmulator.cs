@@ -1,7 +1,5 @@
-using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace JackCompiling;
 
@@ -26,7 +24,7 @@ public class VmEmulator
     
     public void Load(IReadOnlyList<string> vmCodeLines)
     {
-        for (int i = 0; i < vmCodeLines.Count; i++)
+        for (var i = 0; i < vmCodeLines.Count; i++)
         {
             var lineIndex = lines.Count;
             var line = vmCodeLines[i];
@@ -52,20 +50,22 @@ public class VmEmulator
     public void CallFunction(string funcName, int argsCount)
     {
         if (TryCallStandardFunction(funcName, argsCount))
+        {
             return;
+        }
 
         var lineIndex = symbolLineIndex[funcName];
         var parts = lines[lineIndex].Split(" ");
         var localsCount = int.Parse(parts[2]);
         var args = new short[argsCount];
-        for (int i = argsCount - 1; i >= 0; i--)
+        for (var i = argsCount - 1; i >= 0; i--)
         {
             var arg = StackFrame.Stack.Pop();
             args[i] = arg;
         }
         StackFrame = new StackFrame(
-            new short[localsCount], 
-            args, 
+            new short[localsCount],
+            args,
             1234,
             1234,
             StackFrame);
@@ -136,7 +136,7 @@ public class VmEmulator
         }
         if (funcName == "Math.abs")
         {
-            short a = StackFrame.Stack.Pop();
+            var a = StackFrame.Stack.Pop();
             StackFrame.Stack.Push(Math.Abs(a));
             return true;
         }
@@ -157,12 +157,21 @@ public class VmEmulator
         while (lineIndex < lines.Count)
         {
             if (counter++ > 100000)
+            {
                 throw new Exception("Forever loop? Executed more than 100000 vm instructions");
+            }
+
             var line = lines[lineIndex++];
             var result = ExecuteVmCommand(line);
-            if (result.exitFunction) return;
+            if (result.exitFunction)
+            {
+                return;
+            }
+
             if (result.labelToJump != null)
-                lineIndex = symbolLineIndex[result.labelToJump]; 
+            {
+                lineIndex = symbolLineIndex[result.labelToJump];
+            }
         }
     }
 
@@ -195,20 +204,49 @@ public class VmEmulator
             var index = int.Parse(parts[2]);
             SetValue(segment, index, value);
         }
-        else if (command == "add") ExecuteBinaryOperation((a, b) => a + b);
-        else if (command == "sub") ExecuteBinaryOperation((a, b) => a - b);
-        else if (command == "and") ExecuteBinaryOperation((a, b) => a & b);
-        else if (command == "or") ExecuteBinaryOperation((a, b) => a | b);
-        else if (command == "lt") ExecuteBinaryOperation((a, b) => a < b ? -1 : 0);
-        else if (command == "gt") ExecuteBinaryOperation((a, b) => a > b ? -1 : 0);
-        else if (command == "eq") ExecuteBinaryOperation((a, b) => a == b ? -1 : 0);
-        else if (command == "not") ExecuteUnaryOperation(a => ~a);
-        else if (command == "neg") ExecuteUnaryOperation(a => -a);
+        else if (command == "add")
+        {
+            ExecuteBinaryOperation((a, b) => a + b);
+        }
+        else if (command == "sub")
+        {
+            ExecuteBinaryOperation((a, b) => a - b);
+        }
+        else if (command == "and")
+        {
+            ExecuteBinaryOperation((a, b) => a & b);
+        }
+        else if (command == "or")
+        {
+            ExecuteBinaryOperation((a, b) => a | b);
+        }
+        else if (command == "lt")
+        {
+            ExecuteBinaryOperation((a, b) => a < b ? -1 : 0);
+        }
+        else if (command == "gt")
+        {
+            ExecuteBinaryOperation((a, b) => a > b ? -1 : 0);
+        }
+        else if (command == "eq")
+        {
+            ExecuteBinaryOperation((a, b) => a == b ? -1 : 0);
+        }
+        else if (command == "not")
+        {
+            ExecuteUnaryOperation(a => ~a);
+        }
+        else if (command == "neg")
+        {
+            ExecuteUnaryOperation(a => -a);
+        }
         else if (command == "if-goto")
         {
             var label = parts[1];
             if (StackFrame.Stack.Peek() != 0)
+            {
                 return (false, label);
+            }
         }
         else if (command == "goto")
         {
@@ -249,37 +287,100 @@ public class VmEmulator
 
     private void SetValue(string segment, int index, short value)
     {
-        if (segment == "static") Statics[index] = value;
-        else if (segment == "argument") StackFrame.Args[index] = value;
-        else if (segment == "local") StackFrame.Locals[index] = value;
-        else if (segment == "temp") Temp[index] = value;
-        else if (segment == "this") Heap[StackFrame.ThisAddress + index] = value;
-        else if (segment == "that") Heap[StackFrame.ThatAddress + index] = value;
+        if (segment == "static")
+        {
+            Statics[index] = value;
+        }
+        else if (segment == "argument")
+        {
+            StackFrame.Args[index] = value;
+        }
+        else if (segment == "local")
+        {
+            StackFrame.Locals[index] = value;
+        }
+        else if (segment == "temp")
+        {
+            Temp[index] = value;
+        }
+        else if (segment == "this")
+        {
+            Heap[StackFrame.ThisAddress + index] = value;
+        }
+        else if (segment == "that")
+        {
+            Heap[StackFrame.ThatAddress + index] = value;
+        }
         else if (segment == "pointer")
         {
-            if (index == 0) StackFrame.ThisAddress = value;
-            else if (index == 1) StackFrame.ThatAddress = value;
-            else throw new InvalidOperationException($"Wrong pointer index {index}");
+            if (index == 0)
+            {
+                StackFrame.ThisAddress = value;
+            }
+            else if (index == 1)
+            {
+                StackFrame.ThatAddress = value;
+            }
+            else
+            {
+                throw new InvalidOperationException($"Wrong pointer index {index}");
+            }
         }
-        else throw new Exception(segment);
+        else
+        {
+            throw new Exception(segment);
+        }
     }
 
     private short GetValue(string segment, int index)
     {
-        if (segment == "static") return Statics[index];
-        else if (segment == "argument") return StackFrame.Args[index];
-        else if (segment == "local") return StackFrame.Locals[index];
-        else if (segment == "constant") return (short)index;
-        else if (segment == "temp") return Temp[index];
-        else if (segment == "this") return Heap[StackFrame.ThisAddress + index];
-        else if (segment == "that") return Heap[StackFrame.ThatAddress + index];
+        if (segment == "static")
+        {
+            return Statics[index];
+        }
+        else if (segment == "argument")
+        {
+            return StackFrame.Args[index];
+        }
+        else if (segment == "local")
+        {
+            return StackFrame.Locals[index];
+        }
+        else if (segment == "constant")
+        {
+            return (short)index;
+        }
+        else if (segment == "temp")
+        {
+            return Temp[index];
+        }
+        else if (segment == "this")
+        {
+            return Heap[StackFrame.ThisAddress + index];
+        }
+        else if (segment == "that")
+        {
+            return Heap[StackFrame.ThatAddress + index];
+        }
         else if (segment == "pointer")
         {
-            if (index == 0) return StackFrame.ThisAddress;
-            else if (index == 1) return StackFrame.ThatAddress;
-            else throw new InvalidOperationException($"Wrong pointer index {index}");
+            if (index == 0)
+            {
+                return StackFrame.ThisAddress;
+            }
+            else if (index == 1)
+            {
+                return StackFrame.ThatAddress;
+            }
+            else
+            {
+                throw new InvalidOperationException($"Wrong pointer index {index}");
+            }
         }
-        else throw new Exception(segment);
+        else
+        {
+            throw new Exception(segment);
+        }
     }
 }
 

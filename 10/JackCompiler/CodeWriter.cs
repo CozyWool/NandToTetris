@@ -20,7 +20,10 @@ namespace JackCompiling
         private VarInfo? FindVarInfo(string varName)
         {
             if (!methodSymbols.TryGetValue(varName, out var varInfo) && !classSymbols.TryGetValue(varName, out varInfo))
+            {
                 return null;
+            }
+
             return varInfo;
         }
 

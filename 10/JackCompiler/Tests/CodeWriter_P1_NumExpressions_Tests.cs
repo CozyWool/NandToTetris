@@ -53,7 +53,7 @@ namespace JackCompiling.Tests
             const short localValue = 2323;
             const int localIndex = 1;
             var expressionSyntax = ParseExpression(jackExpression);
-            Dictionary<string,VarInfo>? locals = new Dictionary<string, VarInfo>();
+            var locals = new Dictionary<string, VarInfo>();
             locals.Add("arg", new VarInfo(argIndex, VarKind.Parameter, "int"));
             locals.Add("x", new VarInfo(localIndex, VarKind.Local, "int"));
 
@@ -63,7 +63,7 @@ namespace JackCompiling.Tests
             var vmEmulator = VmEmulator.LoadTestCode(codeWriter.ResultVmCode);
             vmEmulator.StackFrame.Args[argIndex] = argValue;
             vmEmulator.StackFrame.Locals[localIndex] = localValue;
-            int lineIndex = 0;
+            var lineIndex = 0;
             vmEmulator.ExecuteFunctionBody(ref lineIndex);
             return vmEmulator.StackFrame.Stack.Pop();
         }
@@ -87,7 +87,7 @@ namespace JackCompiling.Tests
             var vmEmulator = VmEmulator.LoadTestCode(codeWriter.ResultVmCode);
             vmEmulator.Heap[vmEmulator.StackFrame.ThisAddress+instanceFieldIndex] = instanceFieldValue;
             vmEmulator.Statics[staticFieldIndex] = staticFieldValue;
-            int lineIndex = 0;
+            var lineIndex = 0;
             vmEmulator.ExecuteFunctionBody(ref lineIndex);
             return vmEmulator.StackFrame.Stack.Pop();
         }

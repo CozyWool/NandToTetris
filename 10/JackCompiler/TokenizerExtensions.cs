@@ -11,7 +11,10 @@ namespace JackCompiling
         {
             var token = tokenizer.Read();
             if (token.Value != expectedValue)
+            {
                 throw new ExpectedException(expectedValue, token);
+            }
+
             return token;
         }
 
@@ -21,7 +24,10 @@ namespace JackCompiling
         {
             var token = tokenizer.Read();
             if (token.TokenType != expectedType)
+            {
                 throw new ExpectedException(expectedType.ToString(), token);
+            }
+
             return token;
         }
 
@@ -31,7 +37,10 @@ namespace JackCompiling
         {
             var token = tokenizer.TryReadNext();
             if (token == null)
+            {
                 throw new ExpectedException("token", null);
+            }
+
             return token;
         }
 
@@ -46,7 +55,11 @@ namespace JackCompiling
             do
             {
                 var token = tokenizer.TryReadNext();
-                if (token is null) return res;
+                if (token is null)
+                {
+                    return res;
+                }
+
                 var item = tryReadItem(token);
                 if (item is null)
                 {
@@ -71,7 +84,10 @@ namespace JackCompiling
             var token = tokenizer.Read();
             tokenizer.PushBack(token);
             if (token.Value == terminator)
+            {
                 return res;
+            }
+
             do
             {
                 var item = readItem();
@@ -84,7 +100,10 @@ namespace JackCompiling
                 }
 
                 if (delimiterToken.Value != delimiter)
+                {
                     throw new ExpectedException(delimiter, delimiterToken);
+                }
+
                 res.Add(item);
             } while (true);
         }

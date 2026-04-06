@@ -9,7 +9,10 @@ namespace JackCompiling
         protected override void Write(Token token)
         {
             if (needSpace)
+            {
                 Append(" ");
+            }
+
             Append($"{token.Value}");
             needSpace = true;
         }
@@ -17,7 +20,10 @@ namespace JackCompiling
         protected override void OpenContainerTag(Type type)
         {
             if (needSpace)
+            {
                 Append(" ");
+            }
+
             Append($"{GetTagName(type)}[");
             needSpace = false;
         }

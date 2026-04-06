@@ -20,7 +20,7 @@ namespace JackCompiling.Tests
             var codeWriter = new CodeWriter(classSymbols, locals);
             codeWriter.WriteExpression(expressionSyntax);
             var vmEmulator = VmEmulator.LoadTestCode(codeWriter.ResultVmCode);
-            int lineIndex = 0;
+            var lineIndex = 0;
             vmEmulator.ExecuteFunctionBody(ref lineIndex);
             return vmEmulator.StackFrame.Stack.Pop();
         }
@@ -33,7 +33,7 @@ namespace JackCompiling.Tests
             var vmEmulator = new VmEmulator();
             vmEmulator.StackFrame = new StackFrame(new short[5], new short[5], 100, 0, null);
             vmEmulator.Load(codeWriter.ResultVmCode);
-            int lineIndex = 0;
+            var lineIndex = 0;
             vmEmulator.ExecuteFunctionBody(ref lineIndex);
             return vmEmulator;
         }
