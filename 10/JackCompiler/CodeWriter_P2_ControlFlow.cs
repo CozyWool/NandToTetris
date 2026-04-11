@@ -4,19 +4,26 @@ namespace JackCompiling
 {
     public partial class CodeWriter
     {
+        private int _labelCounter = 0;
+
+        private string NewLabel(string name) => $"{name}_{_labelCounter++}";
+
         /// <summary>Statement; Statement; ...</summary>
         public void WriteStatements(StatementsSyntax statements)
         {
-            throw new NotImplementedException();
+            foreach (var statement in statements.Statements)
+            {
+                WriteStatement(statement);
+            }
         }
 
         private void WriteStatement(StatementSyntax statement)
         {
             var ok = TryWriteVarAssignmentStatement(statement)
                      || TryWriteProgramFlowStatement(statement)
-                     || TryWriteDoStatement(statement) // будет реализована в следующий задачах
-                     || TryWriteArrayAssignmentStatement(statement)  // будет реализована в следующий задачах
-                     || TryWriteReturnStatement(statement);  // будет реализована в следующий задачах
+                     || TryWriteDoStatement(statement)
+                     || TryWriteArrayAssignmentStatement(statement)
+                     || TryWriteReturnStatement(statement);
             if (!ok)
             {
                 throw new FormatException($"Unknown statement [{statement}]");
@@ -26,7 +33,32 @@ namespace JackCompiling
         /// <summary>let VarName = Expression;</summary>
         private bool TryWriteVarAssignmentStatement(StatementSyntax statement)
         {
-            throw new NotImplementedException();
+            if (statement is not LetStatementSyntax letStatement)
+            {
+                return false;
+            }
+
+            WriteExpression(letStatement.Value);
+            if (letStatement.Index is null)
+            {
+                var varInfo = FindVarInfo(letStatement.VarName.Value)
+                              ?? throw new Exception($"Unknown variable {letStatement.VarName.Value}");
+
+                Write($"pop {varInfo.SegmentName} {varInfo.Index}");
+                return true;
+            }
+
+            var arrayInfo = FindVarInfo(letStatement.VarName.Value)
+                            ?? throw new Exception($"Unknown array {letStatement.VarName.Value}");
+
+            PushVar(arrayInfo);
+            WriteExpression(letStatement.Index.Index);
+            Write("add");
+
+            Write("pop pointer 1");
+            Write("pop that 0");
+
+            return true;
         }
 
         /// <summary>
@@ -35,7 +67,57 @@ namespace JackCompiling
         /// </summary>
         private bool TryWriteProgramFlowStatement(StatementSyntax statement)
         {
-            throw new NotImplementedException();
+            switch (statement)
+            {
+                case IfStatementSyntax ifStatement:
+                {
+                    var elseLabel = NewLabel("IF_ELSE");
+                    var endLabel = NewLabel("IF_END");
+
+                    WriteExpression(ifStatement.Condition);
+                    Write("not");
+                    Write($"if-goto {elseLabel}");
+
+                    WriteStatements(ifStatement.TrueStatements);
+
+                    if (ifStatement.ElseClause is not null)
+                    {
+                        Write($"goto {endLabel}");
+                        Write($"label {elseLabel}");
+
+                        WriteStatements(ifStatement.ElseClause.FalseStatements);
+
+                        Write($"label {endLabel}");
+                    }
+                    else
+                    {
+                        Write($"label {elseLabel}");
+                    }
+
+                    return true;
+                }
+
+                case WhileStatementSyntax whileStatement:
+                {
+                    var startLabel = NewLabel("WHILE_EXP");
+                    var endLabel = NewLabel("WHILE_END");
+
+                    Write($"label {startLabel}");
+
+                    WriteExpression(whileStatement.Condition);
+                    Write("not");
+                    Write($"if-goto {endLabel}");
+
+                    WriteStatements(whileStatement.Statements);
+                    Write($"goto {startLabel}");
+
+                    Write($"label {endLabel}");
+
+                    return true;
+                }
+            }
+
+            return false;
         }
     }
 }
