@@ -51,7 +51,7 @@ namespace JackCompiling
             var arrayInfo = FindVarInfo(letStatement.VarName.Value)
                             ?? throw new Exception($"Unknown array {letStatement.VarName.Value}");
 
-            PushVar(arrayInfo);
+            Write($"push {arrayInfo.SegmentName} {arrayInfo.Index}");
             WriteExpression(letStatement.Index.Index);
             Write("add");
 
@@ -71,53 +71,61 @@ namespace JackCompiling
             {
                 case IfStatementSyntax ifStatement:
                 {
-                    var elseLabel = NewLabel("IF_ELSE");
-                    var endLabel = NewLabel("IF_END");
-
-                    WriteExpression(ifStatement.Condition);
-                    Write("not");
-                    Write($"if-goto {elseLabel}");
-
-                    WriteStatements(ifStatement.TrueStatements);
-
-                    if (ifStatement.ElseClause is not null)
-                    {
-                        Write($"goto {endLabel}");
-                        Write($"label {elseLabel}");
-
-                        WriteStatements(ifStatement.ElseClause.FalseStatements);
-
-                        Write($"label {endLabel}");
-                    }
-                    else
-                    {
-                        Write($"label {elseLabel}");
-                    }
-
+                    WriteIfStatement(ifStatement);
                     return true;
                 }
 
                 case WhileStatementSyntax whileStatement:
                 {
-                    var startLabel = NewLabel("WHILE_EXP");
-                    var endLabel = NewLabel("WHILE_END");
-
-                    Write($"label {startLabel}");
-
-                    WriteExpression(whileStatement.Condition);
-                    Write("not");
-                    Write($"if-goto {endLabel}");
-
-                    WriteStatements(whileStatement.Statements);
-                    Write($"goto {startLabel}");
-
-                    Write($"label {endLabel}");
-
+                    WriteWhileStatement(whileStatement);
                     return true;
                 }
             }
 
             return false;
+        }
+
+        private void WriteIfStatement(IfStatementSyntax ifStatement)
+        {
+            var elseLabel = NewLabel("IF_ELSE");
+            var endLabel = NewLabel("IF_END");
+
+            WriteExpression(ifStatement.Condition);
+            Write("not");
+            Write($"if-goto {elseLabel}");
+
+            WriteStatements(ifStatement.TrueStatements);
+
+            if (ifStatement.ElseClause is not null)
+            {
+                Write($"goto {endLabel}");
+                Write($"label {elseLabel}");
+
+                WriteStatements(ifStatement.ElseClause.FalseStatements);
+
+                Write($"label {endLabel}");
+            }
+            else
+            {
+                Write($"label {elseLabel}");
+            }
+        }
+
+        private void WriteWhileStatement(WhileStatementSyntax whileStatement)
+        {
+            var startLabel = NewLabel("WHILE_EXP");
+            var endLabel = NewLabel("WHILE_END");
+
+            Write($"label {startLabel}");
+
+            WriteExpression(whileStatement.Condition);
+            Write("not");
+            Write($"if-goto {endLabel}");
+
+            WriteStatements(whileStatement.Statements);
+            Write($"goto {startLabel}");
+
+            Write($"label {endLabel}");
         }
     }
 }
